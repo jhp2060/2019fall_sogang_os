@@ -88,6 +88,7 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
+	while(1);
   return -1;
 }
 
@@ -201,6 +202,8 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
                           bool writable);
 
+#define MAX_ARGC 100
+
 /* Loads an ELF executable from FILE_NAME into the current thread.
    Stores the executable's entry point into *EIP
    and its initial stack pointer into *ESP.
@@ -220,6 +223,19 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
+	
+	/* parse file name */
+	char *file_nm = file_name;
+	int len = strlen(file_nm);
+	int argc = 1;
+	char* tok[MAX_ARGC];
+	char *save_ptr;
+	tok[0] = strtok_r(file_nm, " ", &save_ptr);
+	i = 0;
+	while (tok[i] != NULL){
+		tok[++i] = strtok_r(NULL, " ", &save_ptr);
+	}
+	argc = i;
 
   /* Open executable file. */
   file = filesys_open (file_name);
@@ -304,6 +320,57 @@ load (const char *file_name, void (**eip) (void), void **esp)
   /* Set up stack. */
   if (!setup_stack (esp))
     goto done;
+
+	/* construct stack */
+	char *saddr[MAX_ARGC];
+	char *tmp_csp;
+	char **tmp_ssp;
+	int *tmp_isp;
+	int j;
+
+	for (i=argc-1; i>=0; i--){
+		for (j = strlen(tok[i]); j >= 0; j--) {
+			(*esp)--;
+			tmp_csp = (char*)(*esp);
+			*tmp_csp = tok[i][j];
+		}
+	  saddr[i] = (char*)*esp;
+	}
+
+	/* word-align */
+	int cval = ((int)*esp % 4);
+	for (i=0;i<cval;i++){
+		(*esp)--;
+		tmp_csp = (char*)(*esp);
+		*tmp_csp = NULL;
+	}
+
+	/* push NULL pointer sentinel */
+	*esp -= sizeof(char *);
+	tmp_csp = (char*)(*esp);
+	*tmp_csp = NULL;
+	for (i=argc-1; i>=0; i--){
+		*esp -= sizeof(char **);
+		tmp_ssp = (char**)(*esp);
+		*tmp_ssp = saddr[i];
+	}
+
+	char **argv_addr = *esp;
+	*esp -= sizeof(char**);
+	tmp_ssp = (char**)(*esp);
+	*tmp_ssp = argv_addr;
+
+	*esp -= sizeof(int);
+	tmp_isp = (int*)(*esp);
+	*tmp_isp = argc;
+	
+	/* push fake "return address" */
+	*esp -= sizeof(int*);
+	tmp_isp = (int*)*esp;
+	*tmp_isp = 0;
+
+	//hex_dump(*esp, esp, PHYS_BASE-*esp, 1);
+
 
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
