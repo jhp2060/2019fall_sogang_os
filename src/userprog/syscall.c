@@ -21,7 +21,6 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 bool is_valid_access(void* user_addr){
 	struct thread *t = thread_current(); 
-	if (pagedir_get_page(t->pagedir, user_addr) && is_user_vaddr(user_addr) && !is_kernel_vaddr(user_addr))
-		return 1;
-	else return 0;
+	return (pagedir_get_page(t->pagedir, user_addr) &&
+		   	is_user_vaddr(user_addr) && !is_kernel_vaddr(user_addr));
 }
