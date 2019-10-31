@@ -18,6 +18,7 @@ static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
 	void *esp = f->esp;
+	ASSERT(is_valid_access(esp));
 	int syscall_num = *(int*)esp;
 	esp += sizeof(int*);
 	
@@ -55,6 +56,13 @@ syscall_handler (struct intr_frame *f UNUSED)
 			ASSERT(is_valid_access(buffer));
 			f->eax = sys_write(fd, buffer, size);
 			break;
+		case:
+			ASSERT(is_valid_access(esp));
+			int n = *(int*)esp;
+			esp += sizeof(int*);
+
+			f->eax = sys_fibo(n);
+			break;
 	}
 	//thread_exit();
 }
@@ -87,4 +95,15 @@ int sys_write(int fd, const void *buffer, unsigned size){
 		intr_set_level(INTR_ON);
 	}
 	return written;
+}
+
+int sys_fibonacci(int n){
+	if (n < 2)
+		return n;
+	int i, a=0, b=1;
+	for (i=1; i<n; i++){
+		b = b+a;
+		a = b-a;
+	}
+	return b;
 }
