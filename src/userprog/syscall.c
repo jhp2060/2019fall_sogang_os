@@ -5,6 +5,7 @@
 #include "threads/thread.h"
 #include "devices/shutdown.h"
 #include "devices/input.h"
+#include "devices/intq.h"
 
 static void syscall_handler (struct intr_frame *);
 
@@ -40,12 +41,11 @@ syscall_handler (struct intr_frame *f UNUSED)
 		case SYS_READ:
 			break;
 		case SYS_WRITE:
-			ASSERT(is_valid_access(esp));
-			
+			ASSERT(is_valid_access(esp));	
 			int fd = *(int*)esp;
 			esp += sizeof(int*);
 
-			ASSERT(is_valid_access(f->esp));
+			ASSERT(is_valid_access(esp));
 			const void *buffer = *(void**)esp;
 			esp += sizeof(void**);
 
@@ -56,12 +56,12 @@ syscall_handler (struct intr_frame *f UNUSED)
 			ASSERT(is_valid_access(buffer));
 			f->eax = sys_write(fd, buffer, size);
 			break;
-		case:
+		case SYS_FIBONACCI:
 			ASSERT(is_valid_access(esp));
 			int n = *(int*)esp;
 			esp += sizeof(int*);
 
-			f->eax = sys_fibo(n);
+			f->eax = sys_fibonacci(n);
 			break;
 	}
 	//thread_exit();
@@ -87,12 +87,8 @@ int sys_write(int fd, const void *buffer, unsigned size){
 	int written = 0;
 	if (fd == 1){
 		int i;
-		intr_set_level(INTR_OFF);
-		for (i=0;i<size;i++){
-			input_putc(*(uint8_t*)(buffer+i));
-			written++;
-		}
-		intr_set_level(INTR_ON);
+		putbuf(buffer, size);
+		written = size;
 	}
 	return written;
 }
