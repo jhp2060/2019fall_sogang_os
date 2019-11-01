@@ -7,6 +7,8 @@
 #include "devices/input.h"
 #include "devices/intq.h"
 
+//#include "lib/user/syscall.h"
+
 static void syscall_handler (struct intr_frame *);
 
 void
@@ -25,28 +27,54 @@ syscall_handler (struct intr_frame *f UNUSED)
 	
 	switch (syscall_num) {
 		case SYS_HALT:
-			sys_halt();
+			halt();
 			break;
 		case SYS_EXIT:
 			ASSERT(is_valid_access(esp));
 			int status = *(int*)esp;
 			esp += sizeof(int*);
-
-			sys_exit(status);
+			exit(status);
 			break;
 		case SYS_EXEC:
+			// char* cmd_line
+			ASSERT(is_valid_access(esp));
+			char* cmd_line = *(char**)esp;
+			esp += sizeof(char*);
+			
+			ASSERT(is_valid_access(cmd_line));
+			f->eax = (uint32_t)exec(cmd_line);
 			break;
 		case SYS_WAIT:
+			// pid_t pid
+			ASSERT(is_valid_access(esp));
+			pid_t pid = *(pid_t*)esp;
+			esp += sizeof(pid_t*);
+			f->eax = wait(pid);
 			break;
 		case SYS_READ:
+			// int fd, void *buffer, unsigned size
+			ASSERT(is_valid_access(esp));
+			int r_fd = *(int*)esp;
+			esp += sizeof(int*);
+
+			ASSERT(is_valid_access(esp));
+			void* r_buffer = *(void**)esp;
+			esp += sizeof(void**);
+			
+			ASSERT(is_valid_access(esp));
+			unsigned r_size = *(unsigned*)esp;
+			esp += sizeof(unsigned*);
+
+			ASSERT(is_valid_access(r_buffer));			
+			f->eax = read(r_fd, r_buffer, r_size);			
 			break;
 		case SYS_WRITE:
-			ASSERT(is_valid_access(esp));	
+			ASSERT(is_valid_access(esp));
 			int fd = *(int*)esp;
 			esp += sizeof(int*);
 
 			ASSERT(is_valid_access(esp));
-			const void *buffer = *(void**)esp;
+			void *buffer = *(void**)esp;
 			esp += sizeof(void**);
 
 			ASSERT(is_valid_access(esp));
@@ -54,14 +82,14 @@ syscall_handler (struct intr_frame *f UNUSED)
 			esp += sizeof(unsigned*);
 			
 			ASSERT(is_valid_access(buffer));
-			f->eax = sys_write(fd, buffer, size);
+			f->eax = write(fd, (const void*) buffer, size);
 			break;
 		case SYS_FIBONACCI:
 			ASSERT(is_valid_access(esp));
 			int n = *(int*)esp;
 			esp += sizeof(int*);
 
-			f->eax = sys_fibonacci(n);
+			f->eax = fibonacci(n);
 			break;
 	}
 	//thread_exit();
@@ -69,31 +97,29 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 bool is_valid_access(void *user_addr){
 	struct thread *t = thread_current(); 
-	if (pagedir_get_page(t->pagedir, user_addr) && is_user_vaddr(user_addr) && !is_kernel_vaddr(user_addr))
-		return 1;
-	else return 0;
+	return (pagedir_get_page(t->pagedir, user_addr) &&
+		   	is_user_vaddr(user_addr) && !is_kernel_vaddr(user_addr));
 }
 
-void sys_halt(void){
+void halt(void){
 	shutdown_power_off();
 }
 
-void sys_exit(int status){
+void exit(int status){
 	printf("%s: exit(%d)\n", thread_name(), status);
 	thread_exit();
 }
 
-int sys_write(int fd, const void *buffer, unsigned size){
+int write(int fd, const void *buffer, unsigned size){
 	int written = 0;
 	if (fd == 1){
-		int i;
 		putbuf(buffer, size);
 		written = size;
 	}
 	return written;
 }
 
-int sys_fibonacci(int n){
+int fibonacci(int n){
 	if (n < 2)
 		return n;
 	int i, a=0, b=1;
@@ -103,3 +129,27 @@ int sys_fibonacci(int n){
 	}
 	return b;
 }
+
+/* ----------------------------  */
+
+pid_t exec(char* cmd_line){
+	return (pid_t)(process_execute(cmd_line));
+}
+
+int wait(pid_t pid){
+	return process_wait(pid);
+}
+
+
+int read (int fd, void *buffer, unsigned size){
+	if (fd == STDIN_FILENO){
+		unsigned len;
+		for (len = 0; len <size; len++) {
+			if(((char*)buffer)[len] != '\0') continue;
+			break;
+		}
+		return len;
+	}
+	return -1;
+}
+

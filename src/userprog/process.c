@@ -41,6 +41,9 @@ process_execute (const char *file_name)
 	strlcpy (thread_name, file_name, 16);
 	strtok_r (thread_name, " ", &save_ptr);
 
+  strlcpy(thread_name, file_name, 16);
+  strtok_r(thread_name, " ", &save_ptr);
+
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (thread_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
@@ -91,8 +94,16 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
-	while(1);
-  return -1;
+	int ret = -1;
+	struct thread* t = get_current_child(child_tid);
+	if (t != NULL) {
+		if (t->was_called) return ret;
+		sema_down(&(t->child_lock));
+		ret = t->exit_status;
+		t->was_called = true;
+		sema_up(&(t->memory_lock));
+	}
+	return ret;
 }
 
 /* Free the current process's resources. */
@@ -118,6 +129,8 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
+  sema_up(&(cur->child_lock));
+  sema_down(&(cur->memory_lock));
 }
 
 /* Sets up the CPU for running user code in the current
