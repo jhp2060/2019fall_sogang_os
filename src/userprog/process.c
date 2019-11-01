@@ -202,7 +202,7 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
                           bool writable);
 
-#define MAX_ARGC 100
+#define MAX_ARG 100
 
 /* Loads an ELF executable from FILE_NAME into the current thread.
    Stores the executable's entry point into *EIP
@@ -226,14 +226,13 @@ load (const char *file_name, void (**eip) (void), void **esp)
 	
 	/* parse file name */
 	char *file_nm = file_name;
-	int len = strlen(file_nm);
 	int argc = 1;
-	char* tok[MAX_ARGC];
+	char *argv[MAX_ARG];
 	char *save_ptr;
-	tok[0] = strtok_r(file_nm, " ", &save_ptr);
+	argv[0] = strtok_r(file_nm, " ", &save_ptr);
 	i = 0;
-	while (tok[i] != NULL){
-		tok[++i] = strtok_r(NULL, " ", &save_ptr);
+	while (argv[i] != NULL){
+		argv[++i] = strtok_r(NULL, " ", &save_ptr);
 	}
 	argc = i;
 
@@ -322,54 +321,46 @@ load (const char *file_name, void (**eip) (void), void **esp)
     goto done;
 
 	/* construct stack */
-	char *saddr[MAX_ARGC];
-	char *tmp_csp;
-	char **tmp_ssp;
-	int *tmp_isp;
-	int j;
+	char *stk_addr[MAX_ARG];
+	int len;
 
+	/* push argv[i] */
 	for (i=argc-1; i>=0; i--){
-		for (j = strlen(tok[i]); j >= 0; j--) {
-			(*esp)--;
-			tmp_csp = (char*)(*esp);
-			*tmp_csp = tok[i][j];
-		}
-	  saddr[i] = (char*)*esp;
+		len = strlen(argv[i])+1;
+		*esp -= len;
+		memcpy(*esp, argv[i], len);
+	  stk_addr[i] = *esp;
 	}
 
 	/* word-align */
-	int cval = ((int)*esp % 4);
-	for (i=0;i<cval;i++){
-		(*esp)--;
-		tmp_csp = (char*)(*esp);
-		*tmp_csp = NULL;
-	}
+	int remainder = ((int)*esp % 4);
+	*esp -= remainder;
+	memset(*esp, 0, remainder);
+	
 
 	/* push NULL pointer sentinel */
-	*esp -= sizeof(char *);
-	tmp_csp = (char*)(*esp);
-	*tmp_csp = NULL;
+	*esp -= sizeof(uint32_t);
+	**(uint32_t**)esp = NULL;
+
+	/* push &argv[i] */
 	for (i=argc-1; i>=0; i--){
-		*esp -= sizeof(char **);
-		tmp_ssp = (char**)(*esp);
-		*tmp_ssp = saddr[i];
+		*esp -= sizeof(uint32_t);
+		**(uint32_t**)esp = stk_addr[i];
 	}
 
-	char **argv_addr = *esp;
+	/* push &argv */
 	*esp -= sizeof(char**);
-	tmp_ssp = (char**)(*esp);
-	*tmp_ssp = argv_addr;
+	**(char****)esp = *esp+sizeof(char**);
 
+	/* push argc */
 	*esp -= sizeof(int);
-	tmp_isp = (int*)(*esp);
-	*tmp_isp = argc;
+	**(int**)esp = argc;
 	
 	/* push fake "return address" */
-	*esp -= sizeof(int*);
-	tmp_isp = (int*)*esp;
-	*tmp_isp = 0;
+	*esp -= sizeof(uint32_t);
+	**(uint32_t**)esp = 0;
 
-	//hex_dump(*esp, esp, PHYS_BASE-*esp, 1);
+	//hex_dump(*esp, *esp, PHYS_BASE-*esp, 1);
 
 
   /* Start address. */

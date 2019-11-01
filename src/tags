@@ -194,6 +194,7 @@ LSR_REG	devices/serial.c	34;"	d	file:
 LSR_THRE	devices/serial.c	49;"	d	file:
 LS_REG	devices/serial.c	26;"	d	file:
 MAP_FAILED	lib/user/syscall.h	13;"	d
+MAX_ARGC	userprog/process.c	205;"	d	file:
 MAX_CNT	tests/internal/stdlib.c	19;"	d	file:
 MAX_ELEMS_PER_BUCKET	lib/kernel/hash.c	345;"	d	file:
 MAX_LEVEL	examples/pwd.c	76;"	d	file:
@@ -229,16 +230,16 @@ PANIC	lib/debug.h	14;"	d
 PDBITS	threads/pte.h	28;"	d
 PDMASK	threads/pte.h	29;"	d
 PDSHIFT	threads/pte.h	27;"	d
-PE32Ax	userprog/process.c	144;"	d	file:
-PE32Hx	userprog/process.c	146;"	d	file:
-PE32Ox	userprog/process.c	145;"	d	file:
-PE32Wx	userprog/process.c	143;"	d	file:
+PE32Ax	userprog/process.c	145;"	d	file:
+PE32Hx	userprog/process.c	147;"	d	file:
+PE32Ox	userprog/process.c	146;"	d	file:
+PE32Wx	userprog/process.c	144;"	d	file:
 PF_P	userprog/exception.h	5;"	d
-PF_R	userprog/process.c	196;"	d	file:
+PF_R	userprog/process.c	197;"	d	file:
 PF_U	userprog/exception.h	7;"	d
 PF_W	userprog/exception.h	6;"	d
-PF_W	userprog/process.c	195;"	d	file:
-PF_X	userprog/process.c	194;"	d	file:
+PF_W	userprog/process.c	196;"	d	file:
+PF_X	userprog/process.c	195;"	d	file:
 PGBITS	threads/vaddr.h	19;"	d
 PGMASK	threads/vaddr.h	21;"	d
 PGSHIFT	threads/vaddr.h	18;"	d
@@ -313,14 +314,14 @@ PTRDIFF_MAX	lib/stdint.h	47;"	d
 PTRDIFF_MIN	lib/stdint.h	46;"	d
 PTSHIFT	threads/pte.h	21;"	d
 PTSPAN	threads/pte.h	23;"	d
-PT_DYNAMIC	userprog/process.c	186;"	d	file:
-PT_INTERP	userprog/process.c	187;"	d	file:
-PT_LOAD	userprog/process.c	185;"	d	file:
-PT_NOTE	userprog/process.c	188;"	d	file:
-PT_NULL	userprog/process.c	184;"	d	file:
-PT_PHDR	userprog/process.c	190;"	d	file:
-PT_SHLIB	userprog/process.c	189;"	d	file:
-PT_STACK	userprog/process.c	191;"	d	file:
+PT_DYNAMIC	userprog/process.c	187;"	d	file:
+PT_INTERP	userprog/process.c	188;"	d	file:
+PT_LOAD	userprog/process.c	186;"	d	file:
+PT_NOTE	userprog/process.c	189;"	d	file:
+PT_NULL	userprog/process.c	185;"	d	file:
+PT_PHDR	userprog/process.c	191;"	d	file:
+PT_SHLIB	userprog/process.c	190;"	d	file:
+PT_STACK	userprog/process.c	192;"	d	file:
 Prev	tests/Algorithm/Diff.pm	/^sub Prev {$/;"	s
 QUEUE	devices/serial.c	/^static enum { UNINIT, POLL, QUEUE } mode;$/;"	e	enum:__anon1	file:
 RBR_REG	devices/serial.c	21;"	d	file:

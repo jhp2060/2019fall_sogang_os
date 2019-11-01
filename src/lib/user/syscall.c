@@ -160,6 +160,12 @@ close (int fd)
   syscall1 (SYS_CLOSE, fd);
 }
 
+int
+fibonacci (int n)
+{
+	return syscall1 (SYS_FIBONACCI, n);
+}
+
 mapid_t
 mmap (int fd, void *addr)
 {
