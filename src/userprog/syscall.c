@@ -5,6 +5,7 @@
 #include "threads/thread.h"
 #include "devices/shutdown.h"
 #include "devices/input.h"
+#include "devices/intq.h"
 
 //#include "lib/user/syscall.h"
 
