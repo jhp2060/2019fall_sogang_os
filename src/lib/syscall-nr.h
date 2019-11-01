@@ -19,7 +19,7 @@ enum
     SYS_TELL,                   /* Report current position in a file. */
     SYS_CLOSE,                  /* Close a file. */
 		
-		SYS_FIBONACCI,
+	SYS_FIBONACCI,
 
     /* Project 3 and optionally project 4. */
     SYS_MMAP,                   /* Map a file into memory. */
