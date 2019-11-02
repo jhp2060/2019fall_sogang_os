@@ -19,5 +19,6 @@ int fibonacci (int n);
 pid_t exec (char *cmd_line);
 int wait(pid_t pid);
 int read (int fd, void *buffer, unsigned size);
+int sum_of_four_int(int a, int b, int c, int d);
 
 #endif /* userprog/syscall.h */

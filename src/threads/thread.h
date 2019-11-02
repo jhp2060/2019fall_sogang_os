@@ -98,12 +98,13 @@ struct thread
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
-	struct semaphore child_lock;
-	struct semaphore memory_lock;
-	struct list child;
+	struct list children;
 	struct list_elem child_elem;
 	int exit_status;
+	struct semaphore sema_wait; 		/* sema for synch */
+	struct semaphore sema_exit;
 	bool was_called;
+	bool is_dead;
 #endif
 
     /* Owned by thread.c. */
