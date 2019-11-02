@@ -291,6 +291,7 @@ thread_exit (void)
   ASSERT (!intr_context ());
 
 #ifdef USERPROG
+  thread_current()->is_dead = true;
   process_exit ();
 #endif
 
@@ -472,10 +473,11 @@ init_thread (struct thread *t, const char *name, int priority)
   list_push_back (&all_list, &t->allelem);
 #ifdef USERPROG
   t->was_called = false;
-  sema_init(&(t->child_lock), 0);
-  sema_init(&(t->memory_lock), 0);
-  list_init(&(t->child));
-  list_push_back(&(running_thread()->child), &(t->child_elem));
+  t->is_dead = false;
+  sema_init(&(t->sema_wait),0);
+  sema_init(&(t->sema_exit),0);
+  list_init(&(t->children));
+  list_push_back(&(running_thread()->children), &(t->child_elem));
 #endif
 
 }
@@ -598,7 +600,7 @@ uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 
 struct thread* get_current_child(tid_t child_tid){
 	struct list_elem* iter;
-	struct list* child_list = &(thread_current()->child);
+	struct list* child_list = &(thread_current()->children);
 
 	for (iter = list_begin(child_list); iter != list_end(child_list);
 		   	iter = list_next(iter)){
