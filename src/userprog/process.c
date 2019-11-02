@@ -40,6 +40,9 @@ process_execute (const char *file_name)
 
   strlcpy(thread_name, file_name, 16);
   strtok_r(thread_name, " ", &save_ptr);
+	
+  // for 'exec-missing'
+  if (!filesys_open(thread_name)) return -1;
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (thread_name, PRI_DEFAULT, start_process, fn_copy);
@@ -52,8 +55,9 @@ process_execute (const char *file_name)
    running. */
 static void
 start_process (void *file_name_)
-{
+{		
   char *file_name = file_name_;
+  
   struct intr_frame if_;
   bool success;
 
@@ -62,6 +66,8 @@ start_process (void *file_name_)
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
+
+  
   success = load (file_name, &if_.eip, &if_.esp);
 
   /* If load failed, quit. */
@@ -91,11 +97,12 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
-	int ret = -1, tmp = -1;
+	int ret = -1;
 	struct thread* child = get_current_child(child_tid);
 	if (child != NULL) {
 		//printf("\nchild exit status : %d\n", child->exit_status);
 		/*
+		int tmp = -1;
 		while (child != NULL && !child->is_dead){
 			ret = tmp;
 			tmp = child->exit_status;

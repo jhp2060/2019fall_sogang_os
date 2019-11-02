@@ -42,7 +42,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 			esp += sizeof(char*);
 			
 			ASSERT(is_valid_access(cmd_line));
-			f->eax = (uint32_t)exec(cmd_line);
+			f->eax = exec(cmd_line);
 			break;
 		case SYS_WAIT:
 			// pid_t pid
@@ -116,8 +116,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 bool is_valid_access(void *user_addr){
 	struct thread *t = thread_current(); 
-	if (pagedir_get_page(t->pagedir, user_addr) &&
-		   	is_user_vaddr(user_addr) && !is_kernel_vaddr(user_addr))
+	if (is_user_vaddr(user_addr) && !is_kernel_vaddr(user_addr)
+			&& pagedir_get_page(t->pagedir, user_addr))
 		return true;
 	else exit(-1);
 }
