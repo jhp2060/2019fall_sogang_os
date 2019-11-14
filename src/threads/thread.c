@@ -291,7 +291,7 @@ thread_exit (void)
   ASSERT (!intr_context ());
 
 #ifdef USERPROG
-  thread_current()->is_dead = true;
+  //thread_current()->is_dead = true;
   process_exit ();
 #endif
 
@@ -472,12 +472,15 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
 #ifdef USERPROG
-  t->was_called = false;
-  t->is_dead = false;
+  //t->was_called = false;
+  //t->is_dead = false;
   sema_init(&(t->sema_wait),0);
   sema_init(&(t->sema_exit),0);
   list_init(&(t->children));
   list_push_back(&(running_thread()->children), &(t->child_elem));
+
+  int i;
+  for (i = 0; i < MAX_OPEN_FILES; i++) t->fd[i] = NULL;
 #endif
 
 }
