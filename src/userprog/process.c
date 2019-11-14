@@ -103,19 +103,6 @@ process_wait (tid_t child_tid UNUSED)
 	int ret = -1;
 	struct thread* child = get_current_child(child_tid);
 	if (child != NULL) {
-		//printf("\nchild exit status : %d\n", child->exit_status);
-		/*
-		int tmp = -1;
-		while (child != NULL && !child->is_dead){
-			ret = tmp;
-			tmp = child->exit_status;
-		}
-		*/
-		//printf("\nexit status : %d\n", ret);
-		/*   
-		if (child->was_called) return ret;
-		child_was_called = true;
-		*/
 		sema_down(&(child->sema_wait)); // lock till child dies
 		ret = child->exit_status;		// get exit_status before child dies
 		list_remove(&(child->child_elem));

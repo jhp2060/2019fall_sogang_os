@@ -111,6 +111,23 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 			f->eax = sum_of_four_int(a,b,c,d);
 			break;
+		/* project 2 */
+		case SYS_CREATE:
+			break;
+		case SYS_REMOVE:
+			break;
+		case SYS_OPEN:
+			break;
+		case SYS_FILESEIZE:
+			break;
+		case SYS_SEEK:
+			break;
+		case SYS_TELL:
+			break;
+		case SYS_CLOSE:
+			break;
+		default:
+			break;
 	}
 	//thread_exit();
 }
@@ -177,6 +194,31 @@ int read (int fd, void *buffer, unsigned size){
 
 int sum_of_four_int(int a, int b, int c, int d){
 	return (a+b+c+d);
+}
+
+
+/* project 2 */
+bool create(const char *file, unsigned initial_size){
+
+}
+
+bool remove (const char *file){
+}
+
+int  open (const char *file){
+}
+
+int filesize (int fd){
+}
+
+void seek (int fd, unsigned position){
+}
+
+unsigned tell (int fd){
+}
+
+void close (int fd){
+
 }
 
 
