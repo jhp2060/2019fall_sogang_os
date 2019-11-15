@@ -109,7 +109,7 @@ struct thread
 	int exit_status;
 	struct semaphore sema_wait; 		/* sema for synch */
 	struct semaphore sema_exit;
- 
+
 	struct file* fd[MAX_OPEN_FILES];
 #endif
 

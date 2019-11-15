@@ -7,8 +7,11 @@
 #include "devices/input.h"
 #include "devices/intq.h"
 #include "lib/string.h"
+#include "threads/synch.h"
 
 //#include "lib/user/syscall.h"
+
+struct semaphore mutex;
 
 static void syscall_handler (struct intr_frame *);
 
@@ -16,6 +19,7 @@ void
 syscall_init (void) 
 {
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
+	sema_init(&mutex, 1);
 }
 
 static void
@@ -197,6 +201,7 @@ void exit(int status){
 
 int write(int fd, const void *buffer, unsigned size){
 	int written = 0;
+	sema_down(&mutex);
 	if (fd == 1){
 		putbuf(buffer, size);
 		written = size;
@@ -206,6 +211,7 @@ int write(int fd, const void *buffer, unsigned size){
 		if (!is_valid_fd(fd))	exit(-1);
 		written = file_write(thread_current()->fd[fd], buffer, size);
 	}
+	sema_up(&mutex);
 	return written;
 }
 
@@ -231,19 +237,23 @@ int wait(pid_t pid){
 }
 
 int read (int fd, void *buffer, unsigned size){
+	int read = -1;
+	sema_down(&mutex);
 	if (fd == STDIN_FILENO){
 		unsigned i;
 		for (i = 0; i < size; i++) {
 			((char*)buffer)[i] = input_getc();
 		}
-		return size;
+		read = size;
 	}
 	else if (fd == 1);
 	else {
 		if (!is_valid_fd(fd))	exit(-1);
-		return file_read(thread_current()->fd[fd], buffer, size);
+		read = file_read(thread_current()->fd[fd], buffer, size);
 	}
-	return -1;
+	sema_up(&mutex);
+
+	return read;
 }
 
 int sum_of_four_int(int a, int b, int c, int d){
