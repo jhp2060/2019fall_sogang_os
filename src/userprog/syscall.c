@@ -181,7 +181,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 }
 
 bool is_valid_access(void *user_addr){
-	struct thread *t = thread_current(); 
+	struct thread *t = thread_current();
 	if (is_user_vaddr(user_addr) && !is_kernel_vaddr(user_addr)
 			&& pagedir_get_page(t->pagedir, user_addr))
 		return true;
@@ -196,12 +196,17 @@ void exit(int status){
 	printf("%s: exit(%d)\n", thread_name(), status);
 	thread_current()->exit_status = status;
 	//printf("current exit_status : %d\n", thread_current()->exit_status);
+	
+	int i;
+	for (i=2; i<MAX_OPEN_FILES; i++)
+		if (is_valid_fd(i))
+			close(i);
+
 	thread_exit();
 }
 
 int write(int fd, const void *buffer, unsigned size){
 	int written = 0;
-	sema_down(&mutex);
 	if (fd == 1){
 		putbuf(buffer, size);
 		written = size;
@@ -209,9 +214,10 @@ int write(int fd, const void *buffer, unsigned size){
 	else if (fd == 0);
 	else {
 		if (!is_valid_fd(fd))	exit(-1);
+		sema_down(&mutex);
 		written = file_write(thread_current()->fd[fd], buffer, size);
+		sema_up(&mutex);
 	}
-	sema_up(&mutex);
 	return written;
 }
 
@@ -238,7 +244,6 @@ int wait(pid_t pid){
 
 int read (int fd, void *buffer, unsigned size){
 	int read = -1;
-	sema_down(&mutex);
 	if (fd == STDIN_FILENO){
 		unsigned i;
 		for (i = 0; i < size; i++) {
@@ -249,9 +254,10 @@ int read (int fd, void *buffer, unsigned size){
 	else if (fd == 1);
 	else {
 		if (!is_valid_fd(fd))	exit(-1);
+		sema_down(&mutex);
 		read = file_read(thread_current()->fd[fd], buffer, size);
+		sema_up(&mutex);
 	}
-	sema_up(&mutex);
 
 	return read;
 }
