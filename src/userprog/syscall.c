@@ -6,6 +6,7 @@
 #include "devices/shutdown.h"
 #include "devices/input.h"
 #include "devices/intq.h"
+#include "lib/string.h"
 
 //#include "lib/user/syscall.h"
 
@@ -141,6 +142,11 @@ syscall_handler (struct intr_frame *f UNUSED)
 			f->eax = open((const char*)open_file);
 			break;
 		case SYS_FILESIZE:
+			is_valid_access(esp);
+			int filesize_fd = *(int*)esp;
+			esp += sizeof(int*);
+
+			f->eax = filesize(filesize_fd);
 			break;
 		case SYS_SEEK:
 			// int fd, unsigned position
@@ -150,16 +156,19 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 			is_valid_access(esp);
 			unsigned position = *(unsigned*)esp;
-			seek(seek_fd, esp);
+			seek(seek_fd, position);
 			break;
 		case SYS_TELL:
 			// int fd
 			is_valid_access(esp);
 			int tell_fd = *(int*)esp;
 			
-			f->eax = tell(esp);
+			f->eax = tell(tell_fd);
 			break;
 		case SYS_CLOSE:
+			is_valid_access(esp);
+			int close_fd = *(int*)esp;
+			close(close_fd);
 			break;
 		default:
 			break;
@@ -191,6 +200,11 @@ int write(int fd, const void *buffer, unsigned size){
 	if (fd == 1){
 		putbuf(buffer, size);
 		written = size;
+	}
+	else if (fd == 0);
+	else {
+		if (!is_valid_fd(fd))	exit(-1);
+		written = file_write(thread_current()->fd[fd], buffer, size);
 	}
 	return written;
 }
@@ -224,6 +238,11 @@ int read (int fd, void *buffer, unsigned size){
 		}
 		return size;
 	}
+	else if (fd == 1);
+	else {
+		if (!is_valid_fd(fd))	exit(-1);
+		return file_read(thread_current()->fd[fd], buffer, size);
+	}
 	return -1;
 }
 
@@ -247,10 +266,12 @@ int open (const char *file){
 	// the file could not be opened
 	if (f == NULL) return -1;
 	
-	// STDIN = 0, STDOUT = 1, STDERR = 2
-	int i = 3;
+	// STDIN = 0, STDOUT = 1
+	int i = 2;
 	for (; i < MAX_OPEN_FILES; i++) {
 		if (thread_current()->fd[i] != NULL) continue;
+		if (strcmp(thread_current()->name, file) == 0)
+			file_deny_write(f);
 		thread_current()->fd[i] = f;
 		return i;
 	}
@@ -260,7 +281,7 @@ int open (const char *file){
 }
 
 int filesize (int fd){
-
+	return file_length(thread_current()->fd[fd]);	
 }
 
 void seek (int fd, unsigned position){
@@ -272,7 +293,15 @@ unsigned tell (int fd){
 }
 
 void close (int fd){
-
+	if(!is_valid_fd(fd)) exit(-1);
+	file_close(thread_current()->fd[fd]);
+	thread_current()->fd[fd] = NULL;
 }
 
-
+bool is_valid_fd (int fd) {
+	if (fd < 0 || fd >= MAX_OPEN_FILES)
+		return false;
+	if (thread_current()->fd[fd] == NULL)
+		return false;
+	return true;
+}

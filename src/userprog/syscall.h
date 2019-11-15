@@ -36,5 +36,6 @@ void seek (int fd, unsigned position);
 unsigned tell (int fd);
 void close (int fd);
 
+bool is_valid_fd (int fd);
 
 #endif /* userprog/syscall.h */
