@@ -295,11 +295,11 @@ int filesize (int fd){
 }
 
 void seek (int fd, unsigned position){
-	
+	file_seek(thread_current()->fd[fd], (off_t)position);	
 }
 
 unsigned tell (int fd){
-	
+	return (unsigned) file_tell(thread_current()->fd[fd]);	
 }
 
 void close (int fd){
