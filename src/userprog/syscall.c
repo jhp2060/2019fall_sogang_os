@@ -150,14 +150,14 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 			is_valid_access(esp);
 			unsigned position = *(unsigned*)esp;
-			seek(seek_fd, esp);
+			seek(seek_fd, position);
 			break;
 		case SYS_TELL:
 			// int fd
 			is_valid_access(esp);
 			int tell_fd = *(int*)esp;
 			
-			f->eax = tell(esp);
+			f->eax = tell(tell_fd);
 			break;
 		case SYS_CLOSE:
 			break;
@@ -264,11 +264,11 @@ int filesize (int fd){
 }
 
 void seek (int fd, unsigned position){
-	
+	file_seek(thread_current()->fd[fd], (off_t)position);	
 }
 
 unsigned tell (int fd){
-	
+	return (unsigned) file_tell(thread_current()->fd[fd]);	
 }
 
 void close (int fd){
