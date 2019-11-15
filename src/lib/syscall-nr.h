@@ -20,6 +20,7 @@ enum
     SYS_CLOSE,                  /* Close a file. */
 		
 	SYS_FIBONACCI,
+	SYS_SUM_OF_FOUR_INT,
 
     /* Project 3 and optionally project 4. */
     SYS_MMAP,                   /* Map a file into memory. */

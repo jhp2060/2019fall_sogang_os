@@ -43,6 +43,9 @@ process_execute (const char *file_name)
 
   strlcpy(thread_name, file_name, 16);
   strtok_r(thread_name, " ", &save_ptr);
+	
+  // for 'exec-missing'
+  if (!filesys_open(thread_name)) return -1;
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (thread_name, PRI_DEFAULT, start_process, fn_copy);
@@ -55,8 +58,9 @@ process_execute (const char *file_name)
    running. */
 static void
 start_process (void *file_name_)
-{
+{		
   char *file_name = file_name_;
+  
   struct intr_frame if_;
   bool success;
 
@@ -65,6 +69,8 @@ start_process (void *file_name_)
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
+
+  
   success = load (file_name, &if_.eip, &if_.esp);
 
   /* If load failed, quit. */
@@ -95,13 +101,12 @@ int
 process_wait (tid_t child_tid UNUSED) 
 {
 	int ret = -1;
-	struct thread* t = get_current_child(child_tid);
-	if (t != NULL) {
-		if (t->was_called) return ret;
-		sema_down(&(t->child_lock));
-		ret = t->exit_status;
-		t->was_called = true;
-		sema_up(&(t->memory_lock));
+	struct thread* child = get_current_child(child_tid);
+	if (child != NULL) {
+		sema_down(&(child->sema_wait)); // lock till child dies
+		ret = child->exit_status;		// get exit_status before child dies
+		list_remove(&(child->child_elem));
+		sema_up(&(child->sema_exit));	// unlock when child dies
 	}
 	return ret;
 }
@@ -112,7 +117,8 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
-
+  
+  
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
@@ -129,9 +135,10 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
-  sema_up(&(cur->child_lock));
-  sema_down(&(cur->memory_lock));
+  sema_up(&(cur->sema_wait));		// 
+  sema_down(&(cur->sema_exit));		// 
 }
+
 
 /* Sets up the CPU for running user code in the current
    thread.
