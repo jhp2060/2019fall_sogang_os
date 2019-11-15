@@ -17,6 +17,7 @@
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
+#include "userprog/syscall.h"
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -40,15 +41,16 @@ process_execute (const char *file_name)
 	
 	strlcpy (thread_name, file_name, 16);
 	strtok_r (thread_name, " ", &save_ptr);
-
-  strlcpy(thread_name, file_name, 16);
-  strtok_r(thread_name, " ", &save_ptr);
 	
   // for 'exec-missing'
-  if (!filesys_open(thread_name)) return -1;
+  //if (!filesys_open(thread_name))	return -1;
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (thread_name, PRI_DEFAULT, start_process, fn_copy);
+	
+	struct thread *child = get_current_child(tid);
+	sema_down(&child->load);
+
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy);
   return tid;
@@ -70,13 +72,15 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
 
-  
   success = load (file_name, &if_.eip, &if_.esp);
+
+	sema_up(&thread_current()->load);
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
   if (!success) 
     thread_exit ();
+
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
@@ -264,7 +268,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (file == NULL) 
     {
       printf ("load: %s: open failed\n", file_name);
-      goto done; 
+			goto done; 
     }
 
   /* Read and verify executable header. */
