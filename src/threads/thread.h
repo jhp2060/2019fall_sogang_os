@@ -26,6 +26,12 @@ typedef int tid_t;
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
 
+#ifdef USERPROG
+ /* Pintos manual said (p35) :
+    You may impose a limit of 128 open files per process, if necessary. */
+	#define MAX_OPEN_FILES 128
+#endif
+
 /* A kernel thread or user process.
 
    Each thread structure is stored in its own 4 kB page.  The
@@ -103,8 +109,8 @@ struct thread
 	int exit_status;
 	struct semaphore sema_wait; 		/* sema for synch */
 	struct semaphore sema_exit;
-	bool was_called;
-	bool is_dead;
+ 
+	struct file* fd[MAX_OPEN_FILES];
 #endif
 
     /* Owned by thread.c. */

@@ -6,6 +6,10 @@
 #include "userprog/process.h"
 #define pid_t int
 
+#include "../filesys/filesys.h"
+#include "../filesys/file.h"
+#include "../filesys/inode.h"
+
 void syscall_init (void);
 
 /* project 1 */

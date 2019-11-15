@@ -113,16 +113,51 @@ syscall_handler (struct intr_frame *f UNUSED)
 			break;
 		/* project 2 */
 		case SYS_CREATE:
+			// const char *file, unsigned initial_size
+			is_valid_access(esp);
+			char* create_file = *(char**)esp;
+			esp += sizeof(char*);
+
+			is_valid_access(esp);
+			unsigned initial_size = *(int*)esp;
+
+			is_valid_access(create_file);
+			f->eax = create((const char*)create_file, initial_size);
 			break;
 		case SYS_REMOVE:
+			// const char *file
+			is_valid_access(esp);
+			char* remove_file = *(char**)esp;
+
+			is_valid_access(remove_file);
+			f->eax = remove((const char*)remove_file);
 			break;
 		case SYS_OPEN:
+			// const char* file
+			is_valid_access(esp);
+			char* open_file = *(char**)esp;
+			
+			is_valid_access(open_file);
+			f->eax = open((const char*)open_file);
 			break;
-		case SYS_FILESEIZE:
+		case SYS_FILESIZE:
 			break;
 		case SYS_SEEK:
+			// int fd, unsigned position
+			is_valid_access(esp);
+			int seek_fd = *(int*)esp;
+			esp += sizeof(int*);
+
+			is_valid_access(esp);
+			unsigned position = *(unsigned*)esp;
+			seek(seek_fd, position);
 			break;
 		case SYS_TELL:
+			// int fd
+			is_valid_access(esp);
+			int tell_fd = *(int*)esp;
+			
+			f->eax = tell(tell_fd);
 			break;
 		case SYS_CLOSE:
 			break;
@@ -199,22 +234,41 @@ int sum_of_four_int(int a, int b, int c, int d){
 
 /* project 2 */
 bool create(const char *file, unsigned initial_size){
-
+	return filesys_create(file, (off_t)initial_size);
 }
 
 bool remove (const char *file){
+	return filesys_remove(file);
 }
 
-int  open (const char *file){
+int open (const char *file){
+	struct file *f = filesys_open(file);
+
+	// the file could not be opened
+	if (f == NULL) return -1;
+	
+	// STDIN = 0, STDOUT = 1, STDERR = 2
+	int i = 3;
+	for (; i < MAX_OPEN_FILES; i++) {
+		if (thread_current()->fd[i] != NULL) continue;
+		thread_current()->fd[i] = f;
+		return i;
+	}
+	
+	// overflow of maximum number of files the current thread can open
+	return -1;
 }
 
 int filesize (int fd){
+
 }
 
 void seek (int fd, unsigned position){
+	file_seek(thread_current()->fd[fd], (off_t)position);	
 }
 
 unsigned tell (int fd){
+	return (unsigned) file_tell(thread_current()->fd[fd]);	
 }
 
 void close (int fd){
