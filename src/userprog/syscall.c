@@ -192,6 +192,9 @@ void exit(int status){
 	printf("%s: exit(%d)\n", thread_name(), status);
 	thread_current()->exit_status = status;
 	//printf("current exit_status : %d\n", thread_current()->exit_status);
+	int i = 2;
+	for (; i < MAX_OPEN_FILES; i++)
+		if (thread_current()->fd[i] != NULL) close(i);
 	thread_exit();
 }
 
