@@ -202,7 +202,7 @@ void exit(int status){
 		if (is_valid_fd(i))
 			close(i);
 
-	thread_exit();
+  thread_exit();
 }
 
 int write(int fd, const void *buffer, unsigned size){
