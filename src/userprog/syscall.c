@@ -297,14 +297,17 @@ int open (const char *file){
 }
 
 int filesize (int fd){
+	if (!is_valid_fd(fd)) exit(-1);
 	return file_length(thread_current()->fd[fd]);	
 }
 
 void seek (int fd, unsigned position){
+	if (!is_valid_fd(fd)) exit(-1);
 	file_seek(thread_current()->fd[fd], (off_t)position);	
 }
 
 unsigned tell (int fd){
+	if (!is_valid_fd(fd)) exit(-1);
 	return (unsigned) file_tell(thread_current()->fd[fd]);	
 }
 
