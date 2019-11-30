@@ -113,6 +113,8 @@ struct thread
 	struct semaphore load;
 
 	struct file* fd[MAX_OPEN_FILES];
+
+	int64_t tick_to_wakeup;
 #endif
 
     /* Owned by thread.c. */

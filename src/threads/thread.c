@@ -28,6 +28,14 @@ static struct list ready_list;
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
 
+/* List of sleeping processes. Processes are added to this list
+   when they are blokced and their wake up tiems should be saved as well.
+   When time is up, wake up the thread and insert it into ready_list. */
+struct list sleep_list;
+
+/* Tick variable to store the minimum value of tick_to_wakeup*/
+int64_t min_tick_to_wakeup;
+
 /* Idle thread. */
 static struct thread *idle_thread;
 
@@ -92,6 +100,8 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
+
+  list_init (&sleep_list);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
