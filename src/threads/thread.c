@@ -34,7 +34,7 @@ static struct list all_list;
 struct list sleep_list;
 
 /* Tick variable to store the minimum value of tick_to_wakeup*/
-int64_t min_tick_to_wakeup;
+int64_t min_tick_to_wakeup = INT64_MAX;
 
 /* Idle thread. */
 static struct thread *idle_thread;
@@ -606,7 +606,7 @@ allocate_tid (void)
 
   return tid;
 }
-
+
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
@@ -625,4 +625,29 @@ struct thread* get_current_child(tid_t child_tid){
 	return NULL;
 }
 
+/* newly defined for project 3 */
+void thread_sleep(int64_t ticks)
+{
+  enum intr_level old_level = intr_disable();
+  if(thread_current() != idle_thread){
+    thread_current()->tick_to_wakeup = ticks;
+	list_push_back(&sleep_list, &thread_current()->elem);
+	thread_block();
+  }
+  intr_set_level(old_level);
+}
 
+void thread_wakeup(int64_t ticks) {
+	struct list_elem* iter;
+	struct thread* thread_to_wakeup;
+
+	for (iter = list_begin(&sleep_list); iter != list_end(&sleep_list);) {
+		thread_to_wakeup = list_entry(iter, struct thread, elem);
+		if (thread_to_wakeup->tick_to_wakeup <= ticks) {
+			iter = list_remove(iter);
+			thread_unblock(thread_to_wakeup);
+		}
+		else iter = list_next(iter);
+		//else update_min_tick_to_wakeup()
+	}
+}

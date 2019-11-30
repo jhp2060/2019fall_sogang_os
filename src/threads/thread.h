@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "synch.h"
+#include "../userprog/process.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -18,7 +19,7 @@ enum thread_status
 
 /* Thread identifier type.
    You can redefine this to whatever type you like. */
-typedef int tid_t;
+//typedef int tid_t;
 #define TID_ERROR ((tid_t) -1)          /* Error value for tid_t. */
 
 /* Thread priorities. */
@@ -26,11 +27,9 @@ typedef int tid_t;
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
 
-#ifdef USERPROG
- /* Pintos manual said (p35) :
-    You may impose a limit of 128 open files per process, if necessary. */
-	#define MAX_OPEN_FILES 128
-#endif
+/* Pintos manual said (p35) : 
+   You may impose a limit of 128 open files per process, if necessary. */
+#define MAX_OPEN_FILES 128
 
 /* A kernel thread or user process.
 
@@ -101,7 +100,6 @@ struct thread
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
-#ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
 	struct list children;
@@ -115,7 +113,6 @@ struct thread
 	struct file* fd[MAX_OPEN_FILES];
 
 	int64_t tick_to_wakeup;
-#endif
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
@@ -160,5 +157,11 @@ int thread_get_load_avg (void);
 
 /* newly defined */
 struct thread* get_current_child(tid_t child_tid);
+
+/* newly defined for project 3*/
+void thread_sleep(int64_t ticks);
+void thread_wakeup(int64_t ticks);
+//void update_min_tick_to_wakeup(int64_t ticks);
+//int64_t get_min_tick_to_wakeup(void);
 
 #endif /* threads/thread.h */
