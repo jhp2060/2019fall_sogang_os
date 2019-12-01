@@ -5,7 +5,12 @@
 #include <list.h>
 #include <stdint.h>
 
-#include "synch.h"
+#include "threads/synch.h"
+
+#ifndef USERPROG
+/* Project #3. */
+extern bool thread_prior_aging;
+#endif
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -104,16 +109,19 @@ struct thread
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
-	struct list children;
-	struct list_elem child_elem;
-	int exit_status;
-	struct semaphore sema_wait; 		/* sema for synch */
-	struct semaphore sema_exit;
+		struct list children;
+		struct list_elem child_elem;
+		int exit_status;
+		struct semaphore sema_wait; 		/* sema for synch */
+		struct semaphore sema_exit;
 	
-	struct semaphore load;
+		struct semaphore load;
 
-	struct file* fd[MAX_OPEN_FILES];
+		struct file* fd[MAX_OPEN_FILES];
 #endif
+
+		/* Project 3 */
+		int64_t wakeup_tick;
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
@@ -159,4 +167,16 @@ int thread_get_load_avg (void);
 /* newly defined */
 struct thread* get_current_child(tid_t child_tid);
 
+/* Project 3 */
+void thread_sleep (int64_t ticks);
+void thread_awake (int64_t ticks);
+void update_next_tick_to_awake (int64_t ticks);
+int64_t get_next_tick_to_awake (void);
+
+bool cmp_priority (const struct list_elem *a,
+									 const struct list_elem *b,
+									 void *aux);
+
+
 #endif /* threads/thread.h */
+
