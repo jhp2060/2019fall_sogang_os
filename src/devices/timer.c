@@ -90,13 +90,10 @@ void
 timer_sleep (int64_t ticks) 
 {
   int64_t start = timer_ticks ();
-
+	
   ASSERT (intr_get_level () == INTR_ON);
-  /*
-  while (timer_elapsed (start) < ticks) 
-    thread_yield ();
-  */
-  thread_sleep(start + ticks);  
+
+	thread_sleep(start + ticks);
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -137,9 +134,6 @@ timer_mdelay (int64_t ms)
 }
 
 
-/* Sleeps for approximately US microseconds.  Interrupts need not
-   be turned on.
-
    Busy waiting wastes CPU cycles, and busy waiting with
    interrupts off for the interval between timer ticks or longer
    will cause timer ticks to be lost.  Thus, use timer_usleep()
@@ -175,9 +169,10 @@ static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
-  thread_tick();
-
-  thread_wakeup(ticks);
+  
+  thread_tick ();
+	if (get_next_tick_to_awake() <= ticks)	
+		thread_awake(ticks);
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
@@ -247,6 +242,7 @@ real_time_delay (int64_t num, int32_t denom)
 {
   /* Scale the numerator and denominator down by 1000 to avoid
      the possibility of overflow. */
-  ASSERT (denom % 1000 == 0);
-  busy_wait (loops_per_tick * num / 1000 * TIMER_FREQ / (denom / 1000)); 
+
+	ASSERT (denom % 1000 == 0);
+	busy_wait (loops_per_tick * num / 1000 * TIMER_FREQ / (denom / 1000));
 }
