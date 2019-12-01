@@ -133,8 +133,6 @@ timer_mdelay (int64_t ms)
   real_time_delay (ms, 1000);
 }
 
-/* Sleeps for approximately US microseconds.  Interrupts need not
-   be turned on.
 
    Busy waiting wastes CPU cycles, and busy waiting with
    interrupts off for the interval between timer ticks or longer
@@ -165,12 +163,13 @@ timer_print_stats (void)
 {
   printf ("Timer: %"PRId64" ticks\n", timer_ticks ());
 }
-
+
 /* Timer interrupt handler. */
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
+  
   thread_tick ();
 	if (get_next_tick_to_awake() <= ticks)	
 		thread_awake(ticks);
@@ -243,6 +242,7 @@ real_time_delay (int64_t num, int32_t denom)
 {
   /* Scale the numerator and denominator down by 1000 to avoid
      the possibility of overflow. */
+
 	ASSERT (denom % 1000 == 0);
 	busy_wait (loops_per_tick * num / 1000 * TIMER_FREQ / (denom / 1000));
 }

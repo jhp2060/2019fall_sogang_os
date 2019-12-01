@@ -23,7 +23,7 @@ enum thread_status
 
 /* Thread identifier type.
    You can redefine this to whatever type you like. */
-typedef int tid_t;
+//typedef int tid_t;
 #define TID_ERROR ((tid_t) -1)          /* Error value for tid_t. */
 
 /* Thread priorities. */
@@ -31,11 +31,9 @@ typedef int tid_t;
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
 
-#ifdef USERPROG
- /* Pintos manual said (p35) :
-    You may impose a limit of 128 open files per process, if necessary. */
-	#define MAX_OPEN_FILES 128
-#endif
+/* Pintos manual said (p35) : 
+   You may impose a limit of 128 open files per process, if necessary. */
+#define MAX_OPEN_FILES 128
 
 /* A kernel thread or user process.
 
@@ -106,7 +104,6 @@ struct thread
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
-#ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
 		struct list children;
@@ -176,7 +173,6 @@ int64_t get_next_tick_to_awake (void);
 bool cmp_priority (const struct list_elem *a,
 									 const struct list_elem *b,
 									 void *aux);
-
 
 #endif /* threads/thread.h */
 
