@@ -136,9 +136,6 @@ timer_mdelay (int64_t ms)
 /* Sleeps for approximately US microseconds.  Interrupts need not
    be turned on.
 
-/* Sleeps for approximately US microseconds.  Interrupts need not
-   be turned on.
-
    Busy waiting wastes CPU cycles, and busy waiting with
    interrupts off for the interval between timer ticks or longer
    will cause timer ticks to be lost.  Thus, use timer_usleep()
