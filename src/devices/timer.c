@@ -133,6 +133,8 @@ timer_mdelay (int64_t ms)
   real_time_delay (ms, 1000);
 }
 
+/* Sleeps for approximately US microseconds. Intrrupts need not
+	 be turned on.
 
    Busy waiting wastes CPU cycles, and busy waiting with
    interrupts off for the interval between timer ticks or longer
