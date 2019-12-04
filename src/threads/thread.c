@@ -14,6 +14,7 @@
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
+#include "devices/timer.h"
 
 /* Random value for struct thread's `magic' member.
    Used to detect stack overflow.  See the big comment at the top
@@ -27,10 +28,6 @@ static struct list ready_list;
 /* List of all processes.  Processes are added to this list
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
-
-/* Project 3 */
-static struct list sleep_list;
-int64_t next_tick_to_awake;
 
 /* Idle thread. */
 static struct thread *idle_thread;
@@ -61,6 +58,9 @@ static unsigned thread_ticks;   /* # of timer ticks since last yield. */
 #ifndef USERPROG
 /* Project #3. */
 bool thread_prior_aging;
+static struct list sleep_list;
+int64_t next_tick_to_awake;
+
 #endif
 
 /* If false (default), use round-robin scheduler.
@@ -149,11 +149,10 @@ thread_tick (void)
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
     intr_yield_on_return ();
-
 #ifndef USERPROG
 	/* Project 3. */
-	//if (thread_prior_aging == true)
-	//	thread_aging ();
+	if (thread_prior_aging == true)
+		thread_aging ();
 #endif
 }
 
@@ -365,7 +364,7 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  thread_current ()->priority = new_priority;
+	thread_current ()->priority = new_priority;
 
 	if (list_empty(&ready_list)) return;
 	struct thread *t = list_entry(list_front(&ready_list), struct thread, elem);
@@ -512,6 +511,7 @@ init_thread (struct thread *t, const char *name, int priority)
   for (i = 0; i < MAX_OPEN_FILES; i++) t->fd[i] = NULL;
 #endif
 
+	t->aging_tick = 0;
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
@@ -657,7 +657,7 @@ void thread_sleep (int64_t ticks) {
 	list_push_back (&sleep_list, &t->elem);
 	update_next_tick_to_awake(ticks);
 	thread_block();
-	
+		
 	intr_set_level (old_level);
 }
 
@@ -692,4 +692,20 @@ bool cmp_priority (const struct list_elem *a,
 	struct thread *A = list_entry(a, struct thread, elem);
 	struct thread *B = list_entry(b, struct thread, elem);
 	return A->priority > B->priority;
+}
+
+void thread_aging (void) {
+	struct list_elem *e;
+	for (e = list_begin(&all_list); e != list_end(&all_list);
+			 e = list_next(e)){
+		struct thread *t = list_entry(e, struct thread, allelem);
+		if (t->status != THREAD_RUNNING)
+			t->aging_tick++;
+		while (t->priority < PRI_MAX && t->aging_tick >= TIMER_FREQ){
+			t->priority++;
+			t->aging_tick -= TIMER_FREQ;
+		}
+		if (t->priority > thread_current()->priority)
+			thread_yield();
+	}
 }

@@ -120,6 +120,7 @@ struct thread
 
 		/* Project 3 */
 		int64_t wakeup_tick;
+		int64_t aging_tick;
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
@@ -174,6 +175,8 @@ int64_t get_next_tick_to_awake (void);
 bool cmp_priority (const struct list_elem *a,
 									 const struct list_elem *b,
 									 void *aux);
+
+void thread_aging (void);
 
 #endif /* threads/thread.h */
 
