@@ -9,6 +9,8 @@
 
 #ifndef USERPROG
 /* Project #3. */
+typedef int fp;
+
 extern bool thread_prior_aging;
 #endif
 
@@ -118,9 +120,13 @@ struct thread
 		struct file* fd[MAX_OPEN_FILES];
 #endif
 
+#ifndef USERPROG
 		/* Project 3 */
 		int64_t wakeup_tick;
 		int64_t aging_tick;
+		int nice;
+		fp recent_cpu;
+#endif
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
@@ -177,6 +183,17 @@ bool cmp_priority (const struct list_elem *a,
 									 void *aux);
 
 void thread_aging (void);
+
+fp int_to_fp (int n);
+int fp_to_int (fp x);
+fp mult_fp (fp x, fp y);
+fp div_fp(fp x, fp y);
+
+void calc_mlfqs_priority (struct thread *t);
+void calc_recent_cpu (struct thread *t);
+void calc_load_avg (void);
+void calc_all_mlfqs_priority (void);
+void calc_all_recent_cpu (void);
 
 #endif /* threads/thread.h */
 
