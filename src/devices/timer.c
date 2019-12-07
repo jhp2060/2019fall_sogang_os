@@ -170,9 +170,9 @@ timer_print_stats (void)
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
-  ticks++;
-  
+  ticks++; 
   thread_tick ();
+
 	if (get_next_tick_to_awake() <= ticks)	
 		thread_awake(ticks);
 }
